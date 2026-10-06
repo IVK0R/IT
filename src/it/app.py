@@ -27,18 +27,18 @@ def user_register():
     password_hash = hash_password(req['password'])  # хешируем пароль
     date = (name, login, password_hash)
     cur = cnx.cursor()
+
+    cur.execute('SELECT 1 FROM `users` WHERE `email` = %s LIMIT 1', (login,))
+    if cur.fetchone() is not None:
+        cnx.close()
+        return jsonify({'error': 'Пользователь с таким email уже существует'}), 409
+
     rows = cur.execute('INSERT INTO `users`(`username`, `email`, `password_hash`) VALUES (%s, %s, %s)', date)
     cnx.commit()
     cnx.close()
 
-    return 'vse ok'
+    return 'Пользователь успешно зарегистрирован'
 
-# # Fetch one result
-# row = cur.fetchone()
-# print("Current date is: {0}".format(row[0]))
-
-# # Close connection
-# cnx.close()
 
 @app.route("/login")
 def login():
@@ -47,4 +47,5 @@ def login():
 @app.route("/")
 def registration():
     return render_template('registration.html')
+
 app.run()
