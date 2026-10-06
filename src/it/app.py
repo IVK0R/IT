@@ -1,5 +1,14 @@
 from flask import Flask, render_template, request, jsonify
 import mysql.connector
+import hashlib
+import os
+
+def hash_password(password):
+    salt = os.urandom(32)
+    password_bytes = password.encode('utf-8')
+    hash_object = hashlib.pbkdf2_hmac('sha256', password_bytes, salt, 100000)
+    return salt.hex() + '$' + hash_object.hex()
+
 
 app = Flask(__name__)  
 
@@ -15,8 +24,8 @@ def user_register():
     
     name = req['name']
     login = req['email']
-    password = req['password']
-    date = (name, login, password)
+    password_hash = hash_password(req['password'])  # хешируем пароль
+    date = (name, login, password_hash)
     cur = cnx.cursor()
     rows = cur.execute('INSERT INTO `users`(`username`, `email`, `password_hash`) VALUES (%s, %s, %s)', date)
     cnx.commit()
