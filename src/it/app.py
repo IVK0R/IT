@@ -1,19 +1,15 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
 import mysql.connector
 import hashlib
 import os
 
+salt = os.fsencode('привет')
 def hash_password(password):
-    salt = os.urandom(32)
     password_bytes = password.encode('utf-8')
     hash_object = hashlib.pbkdf2_hmac('sha256', password_bytes, salt, 100000)
     return salt.hex() + '$' + hash_object.hex()
 
-
-app = Flask(__name__)  
-
-@app.route('/user_register', methods=['POST'])
-def user_register():
+def connection():
     req = request.get_json()
     cnx = mysql.connector.connect(
         host="185.114.247.43",
@@ -21,7 +17,13 @@ def user_register():
         database="sch688_vvedenie",
         user="sch688_vvedenie",
         password="Qwerty123")
-    
+
+app = Flask(__name__)  
+
+
+@app.route('/user_register', methods=['POST'])
+def user_registration():
+    connection()
     name = req['name']
     login = req['email']
     password_hash = hash_password(req['password'])  # хешируем пароль
@@ -40,6 +42,21 @@ def user_register():
     return 'Пользователь успешно зарегистрирован'
 
 
+@app.route('/user_authorization', methods=['POST'])
+def user_authorization():
+    connection()
+    login = req['email']
+    password_hash = hash_password(req['password'])
+    date = (name, login, password_hash)
+    cur = cnx.cursor()
+
+    rows = cur.execute('SELECT * FROM users WHERE email=%s AND password_hash=%s', date)
+    cnx.commit()
+    cnx.close()
+    return {'result': True}
+
+    return 'Пользователь успешно зарегистрирован'
+
 @app.route("/login")
 def login():
     return render_template('login.html')
@@ -47,5 +64,9 @@ def login():
 @app.route("/")
 def registration():
     return render_template('registration.html')
+
+@app.route("/profile")
+def profile():
+    return render_template('profile.html')
 
 app.run()

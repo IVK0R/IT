@@ -15,7 +15,22 @@ $(document).ready(function(){
                 data: JSON.stringify({
                     name: $('#fullname').val(),
                     password: $('#password').val(),
-                    email: $('#email').val()
+                    email: $('#username').val()
+                })
+            })
+        }
+    })
+    $('#burmalda').on('submit',function(e){
+        e.preventDefault();
+        if (err == 0){
+            $.ajax({
+                url: '/user_register',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    name: $('#fullname').val(),
+                    password: $('#password').val(),
+                    email: $('#username').val()
                 })
             })
         }
